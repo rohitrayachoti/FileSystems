@@ -1,0 +1,34 @@
+static void s2fs_create_files(struct super_block *sb, struct dentry *root, struct task_struct *process) {
+        struct dentry *subdir;
+
+        atomic_set(&counter, 0);
+
+        struct list_head *list;
+
+        subdir = NULL;
+
+        if (!list_empty(&process->children)) {
+                subdir = s2fs_create_dir(sb, root, process->pid);
+        }
+
+        if(subdir) {
+                s2fs_create_file(sb, subdir, process->pid, &subcounter);
+        }
+        else {
+                s2fs_create_file(sb, root, process->pid, &subcounter);
+        }
+
+        // Iterating the list of all children
+        list_for_each(list, &process->children) {
+                // Reading child process
+                pchild = list_entry(list, struct task_struct, sibling);
+
+                // Printing child process details
+                if(subdir) {
+                        s2fs_create_file(sb, subdir, pchild->pid, &subcounter);
+                }
+
+                // Recursive call for child process with incremented indentation level
+                s2fs_create_files(sb, subdir, pchild);
+        }
+}
